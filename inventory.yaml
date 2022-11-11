@@ -1,0 +1,5 @@
+controllers:
+  hosts:
+    ubt:
+      ansible_host: ubt.local
+      ansible_user: ubt

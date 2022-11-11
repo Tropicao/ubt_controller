@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Link
+Name=UBT
+Comment=The Ultimate Blind Test
+Icon=chromium-browser
+URL=http://localhost:3000

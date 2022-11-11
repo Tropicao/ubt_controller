@@ -1,0 +1,12 @@
+[Unit]
+Description=UBT backend
+Wants=network.target
+Wants=ubt_ap.service
+
+[Service]
+WorkingDirectory=/home/ubt/src/ubt_backend
+ExecStart= /opt/node-v{{ node_version_full }}-linux-arm64/bin/node /home/ubt/src/ubt_backend/src/index.js 
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=UBT frontend
+Wants=network.target
+Wants=ubt_backend.service
+
+[Service]
+WorkingDirectory=/home/ubt/src/ubt_frontend/build
+ExecStart=/usr/bin/python -m http.server 3000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,115 @@
+- name: UBT configuration
+  hosts: ubt
+  become_user: root
+  vars:
+    node_version_major: 18
+    node_version_full: 18.12.1
+  environment:
+    PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ lookup('env', 'PATH') }}"
+  tasks:
+    - name: Upgrade system
+      become: yes
+      apt:
+        update_cache: yes
+        upgrade: dist
+    - name: Fix mouse responsiveness
+      become: yes
+      replace:
+        path: /boot/cmdline.txt
+        regexp: '^([\w](?!.*\busbhid\.mousepoll=0\b).*)'
+        replace: '\1 usbhid.mousepoll=0'
+    - name: Expand filesystem
+      become: yes
+      command: raspi-config nonint do_expand_rootfs
+    - name: Set GPU dedicated memory
+      become: yes
+      command: raspi-config nonint do_memory_split 128
+    - name: Enable Chromium hardware video decoding
+      become: yes
+      copy:
+        src: data/99-vaapi-hardware-decoding
+        dest: /etc/chromium.d/99-vaapi-hardware-decoding
+        mode: '0644'
+    - name: Install node
+      become: yes
+      unarchive:
+        src: "https://nodejs.org/download/release/latest-v{{ node_version_major }}.x/node-v{{ node_version_full }}-linux-arm64.tar.gz"
+        dest: /opt
+        creates: "/opt/node-v{{ node_version_full  }}-linux-arm64"
+        remote_src: yes
+    - name: Add node to path
+      become: yes
+      copy:
+        dest: /etc/profile.d/node_path.sh
+        content: "PATH=$PATH:/opt/node-v{{ node_version_full }}-linux-arm64/bin"
+    - name: Install hostapd
+      become: yes
+      apt:
+        name: hostapd
+    - name: Clone linux-router  
+      git:
+        dest: /home/ubt/src/linux-router
+        repo: https://github.com/garywill/linux-router.git
+    - name: Install UBT AP service
+      become: yes
+      copy:
+        src: data/ubt_ap.service
+        dest: /usr/lib/systemd/system/ubt_ap.service
+    - name: Enable UBT AP
+      become: yes
+      systemd:
+        name: ubt_ap
+        enabled: yes
+        state: restarted
+        daemon-reload: yes
+    - name: Clone UBT frontend
+      git:
+        force: yes
+        dest: /home/ubt/src/ubt_frontend
+        repo: https://github.com/ratchet34/blindtest-reforged
+    - name: Install UBT frontend
+      npm:
+        path: /home/ubt/src/ubt_frontend
+    - name: Build production frontend
+      command: npm run build
+      args:
+        chdir: /home/ubt/src/ubt_frontend
+    - name: Install UBT frontend service
+      become: yes
+      copy:
+        src: data/ubt_frontend.service
+        dest: /usr/lib/systemd/system/ubt_frontend.service
+    - name: Enable UBT frontend
+      become: yes
+      systemd:
+        name: ubt_frontend
+        enabled: yes
+        state: restarted
+        daemon-reload: yes
+    - name: Clone UBT backend
+      git:
+        force: yes
+        dest: /home/ubt/src/ubt_backend
+        repo: https://github.com/ratchet34/blindtest-reforged-back
+    - name: Install UBT backend
+      npm:
+        path: /home/ubt/src/ubt_backend
+    - name: Install UBT backend service
+      become: yes
+      template:
+        src: data/ubt_backend.service
+        dest: /usr/lib/systemd/system/ubt_backend.service
+    - name: Enable UBT backend
+      become: yes
+      systemd:
+        name: ubt_backend
+        enabled: yes
+        state: restarted
+        daemon-reload: yes
+    - name: Install UBT shortcut on desktop
+      copy:
+        src: data/ubt.desktop
+        dest: /home/ubt/Desktop/ubt.desktop
+    - name: Reboot
+      become: yes
+      reboot:
