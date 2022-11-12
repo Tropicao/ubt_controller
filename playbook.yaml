@@ -4,116 +4,136 @@
   vars:
     node_version_major: 18
     node_version_full: 18.12.1
+    gpu_mem: 128
   tasks:
     - name: Upgrade system
-      become: yes
-      apt:
-        update_cache: yes
+      become: true
+      ansible.builtin.apt:
+        update_cache: true
         upgrade: dist
     - name: Fix mouse responsiveness
-      become: yes
-      replace:
+      become: true
+      ansible.builtin.replace:
         path: /boot/cmdline.txt
         regexp: '^([\w](?!.*\busbhid\.mousepoll=0\b).*)'
         replace: '\1 usbhid.mousepoll=0'
+    - name: Check if filesystem is expandable
+      become: true
+      ansible.builtin.command: raspi-config nonint get_can_expand
+      register: needs_fs_expansion
+      changed_when: false
     - name: Expand filesystem
-      become: yes
-      command: raspi-config nonint do_expand_rootfs
+      become: true
+      ansible.builtin.command: raspi-config nonint do_expand_rootfs
+      when: needs_fs_expansion.stdout == 1
+    - name: Check if GPU memory must be adjusted
+      become: true
+      changed_when: false
+      ansible.builtin.command: raspi-config nonint get_config_var gpu_mem /boot/config.txt
+      register: current_gpu_mem
     - name: Set GPU dedicated memory
-      become: yes
-      command: raspi-config nonint do_memory_split 128
+      become: true
+      ansible.builtin.command: "raspi-config nonint do_memory_split {{ gpu_mem }}"
+      when: current_gpu_mem.stdout | int != gpu_mem
     - name: Enable Chromium hardware video decoding
-      become: yes
-      copy:
+      become: true
+      ansible.builtin.copy:
         src: data/99-vaapi-hardware-decoding
         dest: /etc/chromium.d/99-vaapi-hardware-decoding
         mode: '0644'
     - name: Install node
-      become: yes
-      unarchive:
+      become: true
+      ansible.builtin.unarchive:
         src: "https://nodejs.org/download/release/latest-v{{ node_version_major }}.x/node-v{{ node_version_full }}-linux-arm64.tar.gz"
         dest: /opt
-        creates: "/opt/node-v{{ node_version_full  }}-linux-arm64"
-        remote_src: yes
+        creates: "/opt/node-v{{ node_version_full }}-linux-arm64"
+        remote_src: true
     - name: Add node to path
-      become: yes
-      copy:
+      become: true
+      ansible.builtin.copy:
         dest: /etc/profile.d/node_path.sh
         content: "PATH=$PATH:/opt/node-v{{ node_version_full }}-linux-arm64/bin"
+        mode: '0755'
     - name: Install hostapd
-      become: yes
-      apt:
+      become: true
+      ansible.builtin.apt:
         name: hostapd
-    - name: Clone linux-router  
-      git:
+    - name: Clone linux-router
+      ansible.builtin.git:
+        version: master
         dest: /home/ubt/src/linux-router
         repo: https://github.com/garywill/linux-router.git
     - name: Install UBT AP service
-      become: yes
-      copy:
+      become: true
+      ansible.builtin.copy:
         src: data/ubt_ap.service
         dest: /usr/lib/systemd/system/ubt_ap.service
+        mode: '0644'
     - name: Enable UBT AP
-      become: yes
-      systemd:
+      become: true
+      ansible.builtin.systemd:
         name: ubt_ap
-        enabled: yes
-        state: restarted
-        daemon-reload: yes
+        enabled: true
+        state: started
+        daemon-reload: true
     - name: Clone UBT frontend
-      git:
-        force: yes
+      ansible.builtin.git:
+        version: master
         dest: /home/ubt/src/ubt_frontend
         repo: https://github.com/ratchet34/blindtest-reforged
     - name: Install UBT frontend
       environment:
         PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ ansible_env.PATH }}"
-      npm:
+      community.general.npm:
         path: /home/ubt/src/ubt_frontend
     - name: Build production frontend
       environment:
         PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ ansible_env.PATH }}"
-      command: npm run build
+      ansible.builtin.command: npm run build
       args:
+        creates: /home/ubt/src/ubt_frontend/build
         chdir: /home/ubt/src/ubt_frontend
     - name: Install UBT frontend service
-      become: yes
-      copy:
+      become: true
+      ansible.builtin.copy:
         src: data/ubt_frontend.service
         dest: /usr/lib/systemd/system/ubt_frontend.service
+        mode: '0644'
     - name: Enable UBT frontend
-      become: yes
-      systemd:
+      become: true
+      ansible.builtin.systemd:
         name: ubt_frontend
-        enabled: yes
-        state: restarted
-        daemon-reload: yes
+        enabled: true
+        state: started
+        daemon-reload: true
     - name: Clone UBT backend
-      git:
-        force: yes
+      ansible.builtin.git:
+        version: main
         dest: /home/ubt/src/ubt_backend
         repo: https://github.com/ratchet34/blindtest-reforged-back
     - name: Install UBT backend
       environment:
         PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ ansible_env.PATH }}"
-      npm:
+      community.general.npm:
         path: /home/ubt/src/ubt_backend
     - name: Install UBT backend service
-      become: yes
-      template:
+      become: true
+      ansible.builtin.template:
         src: data/ubt_backend.service
         dest: /usr/lib/systemd/system/ubt_backend.service
+        mode: '0644'
     - name: Enable UBT backend
-      become: yes
-      systemd:
+      become: true
+      ansible.builtin.systemd:
         name: ubt_backend
-        enabled: yes
-        state: restarted
-        daemon-reload: yes
+        enabled: true
+        state: started
+        daemon-reload: true
     - name: Install UBT shortcut on desktop
-      copy:
+      ansible.builtin.copy:
         src: data/ubt.desktop
         dest: /home/ubt/Desktop/ubt.desktop
+        mode: '0644'
     - name: Reboot
-      become: yes
-      reboot:
+      become: true
+      ansible.builtin.reboot:
