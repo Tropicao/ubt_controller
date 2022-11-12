@@ -4,8 +4,6 @@
   vars:
     node_version_major: 18
     node_version_full: 18.12.1
-  environment:
-    PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ lookup('env', 'PATH') }}"
   tasks:
     - name: Upgrade system
       become: yes
@@ -68,9 +66,13 @@
         dest: /home/ubt/src/ubt_frontend
         repo: https://github.com/ratchet34/blindtest-reforged
     - name: Install UBT frontend
+      environment:
+        PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ ansible_env.PATH }}"
       npm:
         path: /home/ubt/src/ubt_frontend
     - name: Build production frontend
+      environment:
+        PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ ansible_env.PATH }}"
       command: npm run build
       args:
         chdir: /home/ubt/src/ubt_frontend
@@ -92,6 +94,8 @@
         dest: /home/ubt/src/ubt_backend
         repo: https://github.com/ratchet34/blindtest-reforged-back
     - name: Install UBT backend
+      environment:
+        PATH: "/opt/node-v{{ node_version_full }}-linux-arm64/bin:{{ ansible_env.PATH }}"
       npm:
         path: /home/ubt/src/ubt_backend
     - name: Install UBT backend service
