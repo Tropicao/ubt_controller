@@ -4,19 +4,12 @@
   vars:
     node_version_major: 18
     node_version_full: 18.12.1
-    gpu_mem: 128
   tasks:
     - name: Upgrade system
       become: true
       ansible.builtin.apt:
         update_cache: true
         upgrade: dist
-    - name: Fix mouse responsiveness
-      become: true
-      ansible.builtin.replace:
-        path: /boot/cmdline.txt
-        regexp: '^([\w](?!.*\busbhid\.mousepoll=0\b).*)'
-        replace: '\1 usbhid.mousepoll=0'
     - name: Check if filesystem is expandable
       become: true
       ansible.builtin.command: raspi-config nonint get_can_expand
@@ -26,21 +19,6 @@
       become: true
       ansible.builtin.command: raspi-config nonint do_expand_rootfs
       when: needs_fs_expansion.stdout == 1
-    - name: Check if GPU memory must be adjusted
-      become: true
-      changed_when: false
-      ansible.builtin.command: raspi-config nonint get_config_var gpu_mem /boot/config.txt
-      register: current_gpu_mem
-    - name: Set GPU dedicated memory
-      become: true
-      ansible.builtin.command: "raspi-config nonint do_memory_split {{ gpu_mem }}"
-      when: current_gpu_mem.stdout | int != gpu_mem
-    - name: Enable Chromium hardware video decoding
-      become: true
-      ansible.builtin.copy:
-        src: data/99-vaapi-hardware-decoding
-        dest: /etc/chromium.d/99-vaapi-hardware-decoding
-        mode: '0644'
     - name: Install node
       become: true
       ansible.builtin.unarchive:
@@ -129,11 +107,6 @@
         enabled: true
         state: started
         daemon-reload: true
-    - name: Install UBT shortcut on desktop
-      ansible.builtin.copy:
-        src: data/ubt.desktop
-        dest: /home/ubt/Desktop/ubt.desktop
-        mode: '0644'
     - name: Reboot
       become: true
       ansible.builtin.reboot:
