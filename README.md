@@ -20,16 +20,24 @@ In order to prepare your UBT controller with the appropriate firmware, execute t
 * get `rpi-imager`. This is the prefered way to install Raspberry Pi OS, as advised by [official site](https://www.raspberrypi.com/software/)
 * get a micro SD card of at least 8GB and insert it in your computer
 * Launch `rpi-imager` and set the following configuration
-    * OS : choose Raspberry Pi OS (other) -> Raspberry Pi OS (64 bit)
-    * select the SD card you have inserted in computer
-    * open additionnal settings :
-        * set hostname : "ubt.local"
-        * enable SSH, select public key as preferred authentification method. Your public key will be automatically filled. 
-        * set a username : "ubt"
-        * set a password (choose a password)
-        * do not configure wireless : since UBT controller will manage a wireless access point, ethernet connection must be preferred during the setup
-        * Set Locale : timezone and keyboard
-* start SD card write.
+    * Raspberry PI Device: select the hardware version you have
+    * OS : choose Raspberry Pi OS (other) -> Raspberry Pi OS Lite (64 bit)
+    * Storage: select the SD card you have inserted in computer
+    * Click next. It will open a confirmation popup, from there do not
+      click "Yes" but "Edit settings" :
+      * in the General tab:
+        * Set hostname : "ubt.local"
+        * Set a username and password : use "ubt" as user, and choose a
+        password (eg: "ubt" as well)
+        * do not configure wireless : since UBT controller will manage a
+          wireless access point, ethernet connection must be preferred
+          during the setup
+      * in the Services tab
+        * enable SSH
+          * select public key as preferred authentification method (so you
+            won't have to type your password each time). Paste your ssh
+            public key (ie: the content of your `.ssh/<key_type>.pub`
+     * click "Save", and then "Yes" to actually write the SD card
 
 When the SD card is fully written, plug it onto the Raspberry PI, provide an internet connection to Raspberry PI through ethernet, and plug power source.
 
