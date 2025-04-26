@@ -15,6 +15,11 @@
       ansible.builtin.apt:
         name: git
         state: present
+    - name: Install iptables
+      become: true
+      ansible.builtin.apt:
+        name: iptables
+        state: present
     - name: Check if filesystem is expandable
       become: true
       ansible.builtin.command: raspi-config nonint get_can_expand
