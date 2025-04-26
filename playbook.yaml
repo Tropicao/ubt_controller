@@ -10,6 +10,11 @@
       ansible.builtin.apt:
         update_cache: true
         upgrade: dist
+    - name: Install git
+      become: true
+      ansible.builtin.apt:
+        name: git
+        state: present
     - name: Check if filesystem is expandable
       become: true
       ansible.builtin.command: raspi-config nonint get_can_expand
