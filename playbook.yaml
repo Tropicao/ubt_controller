@@ -2,8 +2,8 @@
   hosts: ubt
   become_user: root
   vars:
-    node_version_major: 18
-    node_version_full: 18.12.1
+    node_version_major: 22
+    node_version_full: 22.15.0
   tasks:
     - name: Upgrade system
       become: true
