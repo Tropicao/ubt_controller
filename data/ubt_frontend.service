@@ -5,7 +5,7 @@ Wants=ubt_backend.service
 
 [Service]
 WorkingDirectory=/home/ubt/src/ubt_frontend/build
-ExecStart=/usr/bin/python -m http.server 3000
+ExecStart=/usr/bin/python -m http.server 80
 Restart=always
 
 [Install]
