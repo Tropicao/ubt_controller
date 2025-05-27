@@ -4,7 +4,7 @@ Wants=network.target
 
 [Service]
 WorkingDirectory=/home/ubt/src/linux-router
-ExecStart=/home/ubt/src/linux-router/lnxrouter -n -c 6 -g 66 --ap wlan0 ubt_ap -p ubt_ap14789 --hidden
+ExecStart=/home/ubt/src/linux-router/lnxrouter -n -c 6 -g 66 --ap wlan1 ubt_ap -p ubt_ap14789 --hidden
 Restart=always
 
 [Install]

@@ -13,7 +13,10 @@ allows the following features :
 ## Hardware
 
 The setup instructions are provided (and have been tested) for at least
-Raspberry Pi 4.
+Raspberry Pi 4. The setup expects an external Wifi dongle, as the Raspberry
+Pi internal chip may have poor performance with many clients connected, and
+as there may be hard limits around the clients number. You can use for
+example a TP-Link AC1300 usb dongle (with antenna)
 
 ## Setup instructions
 
@@ -39,9 +42,9 @@ execute the following steps
         * Set hostname : "ubt.local"
         * Set a username and password : use "ubt" as user, and choose a
           password (eg: "ubt" as well)
-        * do not configure wireless : since UBT controller will manage a
-          wireless access point, ethernet connection must be preferred
-          during the setup
+        * wireless : if you want to manage the UBT controller over wifi,
+          you can configure some credentials to make it automatically
+          connect to an access point.
       * in the Services tab
         * enable SSH
           * select public key as preferred authentification method (so you
